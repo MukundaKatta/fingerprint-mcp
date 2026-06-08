@@ -8,7 +8,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.1.1';
 const ALGOS = ['sha256', 'sha512', 'sha1', 'md5'] as const;
 const ENCODINGS = ['hex', 'base64', 'base64url'] as const;
 type Algo = (typeof ALGOS)[number];
@@ -43,12 +43,17 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
   const { name, arguments: args } = req.params;
   try {
     if (name !== 'fingerprint') return errorResult('unknown tool: ' + name);
-    const a = args as unknown as { text: string; algorithm?: Algo; encoding?: Enc };
+    const a = (args ?? {}) as { text?: unknown; algorithm?: unknown; encoding?: unknown };
+    if (typeof a.text !== 'string') return errorResult('text is required and must be a string');
     const algo = a.algorithm ?? 'sha256';
     const enc = a.encoding ?? 'hex';
-    if (!ALGOS.includes(algo)) return errorResult(`unsupported algorithm: ${algo}`);
-    if (!ENCODINGS.includes(enc)) return errorResult(`unsupported encoding: ${enc}`);
-    return jsonResult({ algorithm: algo, encoding: enc, digest: fingerprint(a.text, algo, enc) });
+    if (!ALGOS.includes(algo as Algo)) return errorResult(`unsupported algorithm: ${String(algo)}`);
+    if (!ENCODINGS.includes(enc as Enc)) return errorResult(`unsupported encoding: ${String(enc)}`);
+    return jsonResult({
+      algorithm: algo,
+      encoding: enc,
+      digest: fingerprint(a.text, algo as Algo, enc as Enc),
+    });
   } catch (err) {
     return errorResult('internal error: ' + (err as Error).message);
   }

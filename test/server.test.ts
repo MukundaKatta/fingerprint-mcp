@@ -31,3 +31,16 @@ test('base64url has no padding', () => {
   assert.ok(!r.includes('='));
   assert.ok(!r.includes('+'));
 });
+test('sha512 hex of "hello world"', () => {
+  assert.equal(
+    fingerprint('hello world', 'sha512', 'hex'),
+    '309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f' +
+      '989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f',
+  );
+});
+test('different input yields different digest', () => {
+  assert.notEqual(
+    fingerprint('a', 'sha256', 'hex'),
+    fingerprint('b', 'sha256', 'hex'),
+  );
+});
